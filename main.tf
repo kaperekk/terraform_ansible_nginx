@@ -1,6 +1,4 @@
 locals {
-  vpc_id           = "vpc-0548d408bf3549ca0"
-  subnet_id        = "subnet-060a1ae52cf0a73d6"
   ssh_user         = "ubuntu"
   key_name         = "devops"
   private_key_path = "~/Downloads/devops.pem"
@@ -10,9 +8,27 @@ provider "aws" {
   region = "us-east-1"
 }
 
+resource "aws_vpc" "webapp_vpc" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "webapp_vpc"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id     = aws_vpc.webapp_vpc.id
+  cidr_block = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "public_subnet"
+  }
+}
+
 resource "aws_security_group" "nginx" {
   name   = "nginx_access"
-  vpc_id = local.vpc_id
+  vpc_id = aws_vpc.webapp_vpc.id
 
   ingress {
     from_port   = 22
@@ -38,7 +54,7 @@ resource "aws_security_group" "nginx" {
 
 resource "aws_instance" "nginx" {
   ami                         = "ami-0dba2cb6798deb6d8"
-  subnet_id                   = "subnet-060a1ae52cf0a73d6"
+  subnet_id                   = aws_subnet.public_subnet.id
   instance_type               = "t2.micro"
   associate_public_ip_address = true
   security_groups             = [aws_security_group.nginx.id]
