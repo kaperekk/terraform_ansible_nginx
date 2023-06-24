@@ -1,0 +1,29 @@
+---
+- name: Install Nginx and Python
+  hosts: all
+  remote_user: ubuntu
+  become: yes
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      become: yes
+
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+      become: yes
+
+    - name: Install Python
+      apt:
+        name: python
+        state: present
+      become: yes
+
+    - name: Start Nginx service
+      service:
+        name: nginx
+        state: started
+      become: yes
